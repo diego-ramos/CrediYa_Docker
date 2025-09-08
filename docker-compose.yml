@@ -1,0 +1,70 @@
+services:
+  autenticacion:
+    build: ../CrediYa
+    container_name: autenticacion
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=autenticacion-db
+      - DB_USER=crediya_user
+      - DB_PASSWORD=crediya123
+      - DB_NAME=crediya_authentication
+      - DB_PORT=3306
+      - SPRING_PROFILES_ACTIVE=dev
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+    depends_on:
+      - autenticacion-db
+
+  solicitudes:
+    build: ../CrediYa_Solicitudes
+    container_name: solicitudes
+    ports:
+      - "8081:8081"
+    environment:
+      - DB_HOST=solicitudes-db
+      - DB_USER=crediya_user
+      - DB_PASSWORD=crediya123
+      - DB_NAME=crediya_applications
+      - DB_PORT=3306
+      - SPRING_PROFILES_ACTIVE=dev
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+    depends_on:
+      - solicitudes-db
+
+  autenticacion-db:
+    image: mariadb:10.11
+    container_name: autenticacion-db
+    restart: unless-stopped
+    environment:
+      - MARIADB_DATABASE=crediya_authentication
+      - MARIADB_USER=crediya_user
+      - MARIADB_PASSWORD=crediya123
+      - MARIADB_ROOT_PASSWORD=pantalla
+    ports:
+      - "3307:3306"
+    volumes:
+      - autenticacion_data:/var/lib/mysql
+      - ./initdb/autenticacion:/docker-entrypoint-initdb.d
+
+  solicitudes-db:
+    image: mariadb:10.11
+    container_name: solicitudes-db
+    restart: unless-stopped
+    environment:
+      - MARIADB_DATABASE=crediya_applications
+      - MARIADB_USER=crediya_user
+      - MARIADB_PASSWORD=crediya123
+      - MARIADB_ROOT_PASSWORD=pantalla
+    ports:
+      - "3308:3306"
+    volumes:
+      - solicitudes_data:/var/lib/mysql
+      - ./initdb/solicitudes:/docker-entrypoint-initdb.d
+
+volumes:
+  autenticacion_data:
+  solicitudes_data:
