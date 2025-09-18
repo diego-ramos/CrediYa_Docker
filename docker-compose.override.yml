@@ -1,0 +1,102 @@
+services:
+  # -------------------------
+  # DB para autenticación
+  # -------------------------
+  autenticacion-db:
+    image: mariadb:11
+    container_name: autenticacion-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${AUTENTICACION_DB_PASSWORD}
+      MYSQL_DATABASE: crediya_authentication
+      MYSQL_USER: ${AUTENTICACION_DB_USER}
+      MYSQL_PASSWORD: ${AUTENTICACION_DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - autenticacion_data:/var/lib/mysql
+      - ./initdb/autenticacion:/docker-entrypoint-initdb.d
+
+  # -------------------------
+  # DB para solicitudes
+  # -------------------------
+  solicitudes-db:
+    image: mariadb:11
+    container_name: solicitudes-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${SOLICITUDES_DB_PASSWORD}
+      MYSQL_DATABASE: crediya_applications
+      MYSQL_USER: ${SOLICITUDES_DB_USER}
+      MYSQL_PASSWORD: ${SOLICITUDES_DB_PASSWORD}
+    ports:
+      - "3308:3306"
+    volumes:
+      - solicitudes_data:/var/lib/mysql
+      - ./initdb/solicitudes:/docker-entrypoint-initdb.d
+
+  # -------------------------
+  # Microservicio: Autenticación
+  # -------------------------
+  autenticacion:
+    build:
+      context: ../CrediYa
+      dockerfile: Dockerfile
+    container_name: autenticacion
+    depends_on:
+      - autenticacion-db
+    environment:
+      DB_HOST: autenticacion-db
+      DB_PORT: 3306
+      DB_NAME: crediya_authentication
+      DB_USER: ${AUTENTICACION_DB_USER}
+      DB_PASSWORD: ${AUTENTICACION_DB_PASSWORD}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+    ports:
+      - "8080:8080"
+
+  # -------------------------
+  # Microservicio: Solicitudes
+  # -------------------------
+  solicitudes:
+    build:
+      context: ../CrediYa_Solicitudes
+      dockerfile: Dockerfile
+    container_name: solicitudes
+    depends_on:
+      - solicitudes-db
+    environment:
+      DB_HOST: solicitudes-db
+      DB_PORT: 3306
+      DB_NAME: crediya_applications
+      DB_USER: ${SOLICITUDES_DB_USER}
+      DB_PASSWORD: ${SOLICITUDES_DB_PASSWORD}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+    ports:
+      - "8081:8081"
+
+  # -------------------------
+  # Microservicio: Reportes
+  # -------------------------
+  reportes:
+    build:
+      context: ../CrediYa_Reports
+      dockerfile: Dockerfile
+    container_name: reportes
+    depends_on:
+      - autenticacion-db
+      - solicitudes-db
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+    ports:
+      - "8082:8082"
+
+volumes:
+  autenticacion_data:
+  solicitudes_data:

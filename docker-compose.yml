@@ -1,70 +1,39 @@
 services:
+  # -------------------------
+  # Microservicio: Autenticación
+  # -------------------------
   autenticacion:
-    build: ../CrediYa
-    container_name: autenticacion
-    ports:
-      - "8080:8080"
+    image: 557649279192.dkr.ecr.us-east-2.amazonaws.com/autenticacion:latest
+    restart: always
     environment:
-      - DB_HOST=autenticacion-db
-      - DB_USER=crediya_user
-      - DB_PASSWORD=crediya123
-      - DB_NAME=crediya_authentication
-      - DB_PORT=3306
-      - SPRING_PROFILES_ACTIVE=dev
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION}
-    depends_on:
-      - autenticacion-db
-
+      SPRING_DATASOURCE_URL: r2dbc:mariadb://${AUTENTICACION_DB_ENDPOINT}:3306/crediya_authentication
+      SPRING_DATASOURCE_USERNAME: ${AUTENTICACION_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${AUTENTICACION_DB_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+    depends_on: []
+    
+  # -------------------------
+  # Microservicio: Solicitudes
+  # -------------------------
   solicitudes:
-    build: ../CrediYa_Solicitudes
-    container_name: solicitudes
-    ports:
-      - "8081:8081"
+    image: 557649279192.dkr.ecr.us-east-2.amazonaws.com/solicitudes:latest
+    restart: always
     environment:
-      - DB_HOST=solicitudes-db
-      - DB_USER=crediya_user
-      - DB_PASSWORD=crediya123
-      - DB_NAME=crediya_applications
-      - DB_PORT=3306
-      - SPRING_PROFILES_ACTIVE=dev
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_REGION=${AWS_REGION}
-    depends_on:
-      - solicitudes-db
+      SPRING_DATASOURCE_URL: r2dbc:mariadb://${SOLICITUDES_DB_ENDPOINT}:3306/crediya_applications
+      SPRING_DATASOURCE_USERNAME: ${SOLICITUDES_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SOLICITUDES_DB_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+    depends_on: []
 
-  autenticacion-db:
-    image: mariadb:10.11
-    container_name: autenticacion-db
-    restart: unless-stopped
+  # -------------------------
+  # Microservicio: Reportes
+  # -------------------------
+  reportes:
+    image: 557649279192.dkr.ecr.us-east-2.amazonaws.com/reportes:latest
+    restart: always
     environment:
-      - MARIADB_DATABASE=crediya_authentication
-      - MARIADB_USER=crediya_user
-      - MARIADB_PASSWORD=crediya123
-      - MARIADB_ROOT_PASSWORD=pantalla
-    ports:
-      - "3307:3306"
-    volumes:
-      - autenticacion_data:/var/lib/mysql
-      - ./initdb/autenticacion:/docker-entrypoint-initdb.d
-
-  solicitudes-db:
-    image: mariadb:10.11
-    container_name: solicitudes-db
-    restart: unless-stopped
-    environment:
-      - MARIADB_DATABASE=crediya_applications
-      - MARIADB_USER=crediya_user
-      - MARIADB_PASSWORD=crediya123
-      - MARIADB_ROOT_PASSWORD=pantalla
-    ports:
-      - "3308:3306"
-    volumes:
-      - solicitudes_data:/var/lib/mysql
-      - ./initdb/solicitudes:/docker-entrypoint-initdb.d
-
-volumes:
-  autenticacion_data:
-  solicitudes_data:
+      SPRING_DATASOURCE_URL: r2dbc:mariadb://${SOLICITUDES_DB_ENDPOINT}:3306/crediya_applications
+      SPRING_DATASOURCE_USERNAME: ${SOLICITUDES_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${SOLICITUDES_DB_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+    depends_on: []
