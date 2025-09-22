@@ -25,6 +25,7 @@ services:
     container_name: solicitudes-db
     restart: always
     environment:
+      AUTH_URL: http://autenticacion:8080
       MYSQL_ROOT_PASSWORD: ${SOLICITUDES_DB_PASSWORD}
       MYSQL_DATABASE: crediya_applications
       MYSQL_USER: ${SOLICITUDES_DB_USER}
